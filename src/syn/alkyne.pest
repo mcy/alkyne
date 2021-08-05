@@ -1,0 +1,205 @@
+
+// Comments and whitespace.
+LineComment  = _{ "//" ~ (!NEWLINE ~ ANY)* ~ NEWLINE }
+BlockComment = _{ "/*" ~ (BlockComment | (!"*/" ~ ANY))* ~ "*/" }
+COMMENT      = _{ LineComment | BlockComment }
+WHITESPACE   = _{ " " | "\t" | "\r" | "\n" }
+
+// Keywords.
+Keyword = _{
+    Break | Cont | Do | Else | False | Fn | For | Here | If | In | It | Let | Null | Oper |
+    Ret | Zelf | Std | Super | Switch | Top | True | Use | Yield
+}
+Break  = { "break" }
+Cont   = { "continue" }
+Do     = { "do" }
+Else   = { "else" }
+False  = { "false" }
+Fn     = { "fn" }
+For    = { "for" }
+Here   = { "here" }
+If     = { "if" }
+In     = { "in" }
+It     = { "it" }
+Let    = { "let" }
+Null   = { "null" }
+Oper   = { "oper" }
+Ret    = { "return" }
+Zelf   = { "self" }
+Std    = { "std" }
+Super  = { "super" }
+Switch = { "switch" }
+Top    = { "top" }
+True   = { "true" }
+Use    = { "use" }
+Yield  = { "yield" }
+
+// Punctuation.
+At    = _{ "@" }
+Eq    = { "=" }
+Semi  = _{ ";" }
+Col   = _{ ":" }
+Comma = _{ "," }
+Dot   = _{ "." }
+DotDot = { ".." }
+Arrow = { "->" }
+Question = { "?" }
+
+Plus   = { "+" }
+Dash   = { "-" }
+Star   = { "*" }
+Slash  = { "/" }
+Pct    = { "%" }
+AndAnd = { "&&" }
+OrOr   = { "||" }
+Or     = { "|" }
+EqEq   = { "==" }
+NeEq   = { "!=" }
+Gt     = { ">" }
+Lt     = { "<" }
+GtEq   = { ">=" }
+LtEq   = { "<=" }
+Bang   = { "!" }
+Elvis  = { "??" }
+
+OverOp = _{ Plus | Dash | Star | Slash | Pct | EqEq | Lt | Bang }
+
+LParen = _{ "(" }
+RParen = _{ ")" }
+LBrack = _{ "[" }
+RBrack = _{ "]" }
+LBrace = _{ "{" }
+RBrace = _{ "}" }
+
+// Literals.
+Ident = { Word | Operator }
+Word = @{
+    (!Keyword ~ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")*) |
+    (Keyword ~ (ASCII_ALPHANUMERIC | "_")+)
+}
+Operator = @{ Oper ~ OverOp }
+
+String       = { DString | SString }
+DString      = ${ "\"" ~ DStringInner ~ "\"" }
+DStringInner = @{ DStringChar* }
+DStringChar  = {
+    !("\"" | "\\") ~ ANY
+    | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "x" | "u" | "U")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+SString      = ${ "'" ~ SStringInner ~ "'" }
+SStringInner = @{ SStringChar* }
+SStringChar  = {
+    !("\'" | "\\") ~ ANY
+    | "\\" ~ ("'" | "\\" | "/" | "b" | "f" | "n" | "r" | "t" | "x" | "u" | "U")
+    | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+
+Number = @{ ASCII_DIGIT+ ~ (Dot ~ ASCII_DIGIT+)? }
+
+// Expressions.
+List   = { LBrack ~ (Expr ~ Comma)* ~ Expr? ~ RBrack }
+// NOTE: Object takes priority over Block.
+Object = { LBrace ~ (Kv ~ Comma)* ~ Kv? ~ RBrace }
+Block  = { LBrace ~ ((Stmt* ~ Expr) | Stmt+) ~ RBrace }
+FnLit  = { Fn ~ LParen ~ (Pat ~ Comma)* ~ Pat? ~ RParen ~ Expr }
+IfExpr = {
+    If ~ Expr ~ Block ~
+    (Else ~ If ~ Expr ~ Block)* ~
+    (Else ~ Block)?
+}
+SwitchExpr = {
+    Switch ~ Expr ~ LBrace ~
+        ((Expr ~ Comma)* ~ Expr ~ Comma? ~ Arrow ~ Expr ~ Comma)* ~
+        (Else ~ Arrow ~ Expr ~ Comma)? ~
+    RBrace
+}
+ForExpr = {
+    For ~ (Pat ~ Comma)* ~ Pat ~ Comma? ~ In ~ Question? ~ Expr ~ Block
+}
+ForYield = {
+    For ~ (Pat ~ Comma)* ~ Pat ~ Comma? ~ In ~ Question?
+    ~ Expr ~ (YieldKv | YieldVal)
+}
+YieldVal  = { Yield ~ Expr }
+YieldKv   = { Yield ~ Kv }
+BreakExpr = { Break ~ Expr? }
+RetExpr   = { Ret ~ Expr }
+Parens    = { LParen ~ Expr ~ RParen }
+
+FloatingExpr = _{ IfExpr | ForExpr | SwitchExpr | Block }
+ScalarExpr = _{ Null | True | False | Number | String }
+
+Key = { (Super ~ Question? ~ Dot)? ~ (Ident | String | (LBrack ~ Expr ~ RBrack)) }
+Kv = { Key ~ Question? ~ Col ~ Expr }
+
+BaseExpr = _{
+    ScalarExpr | Ident | Zelf | Super | Top | Here | It | Std | List | Object |
+    Block | FnLit | IfExpr | SwitchExpr | ForExpr | ForYield | YieldKv |
+    YieldVal | BreakExpr | Cont | RetExpr | Parens
+}
+
+SufExpr = { BaseExpr ~ (Member | Call | Index | Object | DoExpr)* }
+Member = { (Question? ~ Dot ~ (Ident | String)) }
+Call   = { (LParen ~ (Expr ~ Comma)* ~ Expr? ~ RParen) }
+Index  = { (Question? ~ LBrack ~ (Expr ~ Comma)* ~ Expr? ~ RBrack) }
+DoExpr = { Do ~ Question? ~ FloatingExpr }
+
+UnaryExpr = { (Dash | Bang)* ~ SufExpr }
+ProdExpr  = { UnaryExpr ~ ((Star | Slash | Pct) ~ UnaryExpr)* }
+SumExpr   = { ProdExpr ~ ((Plus | Dash) ~ ProdExpr)* }
+ElvisExpr = { SumExpr ~ (Elvis ~ SumExpr)* }
+OrdExpr   = { ElvisExpr ~ ((GtEq | Gt | LtEq | Lt) ~ ElvisExpr)* }
+EqExpr    = { OrdExpr ~ ((EqEq | NeEq) ~ OrdExpr)* }
+AndExpr   = { EqExpr ~ (AndAnd ~ EqExpr)* }
+OrExpr    = { AndExpr ~ (OrOr ~ AndExpr)* }
+
+Expr      = { OrExpr }
+
+// Patterns.
+LiteralPat = { ScalarExpr }
+BindPat = { Ident }
+ExactListPat = { LBrack ~ (Pat ~ Comma)* ~ Pat? ~ RBrack }
+GlobListPat = {
+    LBrack ~
+        (Pat ~ Comma)* ~
+        DotDot ~ Ident? ~
+        (Comma ~ Pat)* ~ Comma? ~
+    RBrack
+}
+KvPat = { (Ident | String) ~ Question? ~ (Col ~ Pat)? }
+ObjectPat = {
+    LBrace ~
+        (KvPat ~ Comma)* ~ ((DotDot ~ Comma?) | KvPat)? ~
+    RBrace
+}
+ParenPat = { LParen ~ Pat ~ RParen }
+
+BasePat = _{
+    LiteralPat | BindPat | ExactListPat | GlobListPat | ObjectPat | ParenPat
+}
+OrPat = { BasePat ~ (Or ~ BasePat)* }
+AtPat = { (Ident ~ At)* ~ OrPat }
+Pat = { AtPat }
+
+// Statements.
+LetStmt = { Let ~ Pat ~ Eq ~ Expr ~ Semi }
+FnStmt = {
+    Fn ~ Ident ~ LParen ~
+        (Pat ~ Comma)* ~ Pat? ~
+    RParen ~ ((Eq ~ Expr ~ Semi) | FloatingExpr)
+}
+ExprStmt = { Expr ~ Semi }
+Stmt = { LetStmt | FnStmt | ExprStmt | FloatingExpr | Semi }
+Stmts = _{ Stmt* ~ Expr? }
+
+ExprOrStmt = _{ Expr | Stmt }
+
+// Grammar root.
+Import = { Use ~ Ident ~ Eq ~ String ~ Semi }
+Unit = {
+    SOI ~
+    Import* ~
+    Stmts ~
+    EOI
+}

@@ -1,0 +1,135 @@
+# Copyright 2021 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+%YAML 1.2
+---
+name: Alkyne
+file_extensions: [ak]
+scope: source.alkyne
+contexts:
+  main:
+    # Double- and single-quoted strings.
+    - match: '"'
+      scope: punctuation.definition.string.double.begin.alkyne
+      push: dstring
+    - match: "'"
+      scope: punctuation.definition.string.single.begin.alkyne
+      push: sstring
+
+    # Comments.
+    - match: '//'
+      scope: punctuation.definition.comment.alkyne
+      push: line_comment
+    - match: '/\*'
+      scope: punctuation.definition.comment.alkyne
+      push: block_comment
+
+    # Syntactic control keywords.
+    - match:
+        '\b(break|continue|else|fn|for|if|in|let|return|switch|use|yield)\b'
+      scope: keyword.control.alkyne
+
+    # Simple operators.
+    - match: '(!|%|&|\*|-|=|\+|<|>|\?|/)'
+      scope: keyword.operator.alkyne
+    # `oper` indentifiers.
+    - match: '\boper(\+|-|\*|/|%|==|!)'
+      scope: keyword.operator.alkyne
+
+    # Constant keywords.
+    - match: '\bnull\b'
+      scope: constant.language.null.alkyne
+
+    - match: '\bfalse\b'
+      scope: constant.language.boolean.false.alkyne
+    - match: '\btrue\b'
+      scope: constant.language.boolean.true.alkyne
+
+    - match: '\bself\b'
+      scope: constant.language.self.alkyne
+    - match: '\bsuper\b'
+      scope: constant.language.super.alkyne
+
+    - match: '\btop\b'
+      scope: constant.language.top.alkyne
+    - match: '\bhere\b'
+      scope: constant.language.here.alkyne
+    - match: '\bstd\b'
+      scope: constant.language.std.alkyne
+
+    # Numbers
+    - match: '\b(-)?[0-9][0-9.]*\b'
+      scope: constant.numeric.alkyne
+
+    # Bracket matching.
+    - match: '[(\[{]'
+      scope: punctuation.definition.group.begin.alkyne
+      push: bracket_match
+    - match: '[)\]}]'
+      scope: invalid.illegal.stray-bracket-end
+
+    # Separators.
+    - match: '(\.|,|:|;)'
+      scope: punctuation.separator.alkyne
+
+    # Function calls.
+    - match: '(\w+)(?=\()'
+      captures:
+        1: variable.function.alkyne
+
+  bracket_match:
+    - match: '[)\]}]'
+      scope: punctuation.definition.group.end.alkyne
+      pop: true
+    - include: main
+
+  string_escapes:
+    - match: "\\[0ntrbf\\\"\']"
+      scope: constant.character.escape.alkyne
+    - match: '\\x[0-9a-fA-F]{2}'
+      scope: constant.character.escape.alkyne
+    - match: '\\u[0-9a-fA-F]{4}'
+      scope: constant.character.escape.alkyne
+    - match: '\\U[0-9a-fA-F]{8}'
+      scope: constant.character.escape.alkyne
+    - match: "\\[^0ntrbfxuU\\\"\']"
+      scope: invalid.illegal.unknown-escape.alkyne
+  string_format_specs:
+    - match: '%[%dsqf]'
+      scope: constant.character.other.alkyne
+  dstring:
+    - meta_scope: string.quoted.double.alkyne
+    - include: string_escapes
+    - match: '"'
+      scope: punctuation.definition.string.double.end.alkyne
+      pop: true
+  sstring:
+    - meta_scope: string.quoted.single.alkyne
+    - include: string_escapes
+    - match: "'"
+      scope: punctuation.definition.string.single.end.alkyne
+      pop: true
+
+  line_comment:
+    - meta_scope: comment.line.alkyne
+    - match: $
+      pop: true
+  block_comment:
+    - meta_scope: comment.block.alkyne
+    - match: '/\*'
+      scope: punctuation.definition.comment.alkyne
+      push: block_comment
+    - match: '\*/'
+      scope: punctuation.definition.comment.alkyne
+      pop: true
+
