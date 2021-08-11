@@ -239,9 +239,7 @@ impl<'i, 'a> Iterator for Iter<'i, 'a> {
 
   fn next(&mut self) -> Option<Self::Item> {
     loop {
-      if self.obj.is_none() {
-        return None;
-      }
+      self.obj?;
       let obj = self.obj.as_mut().unwrap();
 
       if self.field_iter.is_none() {
@@ -260,10 +258,7 @@ impl<'i, 'a> Iterator for Iter<'i, 'a> {
         }
       }
       let iter = self.field_iter.as_mut().unwrap();
-      let item = match iter.next() {
-        Some((k, v)) => Some((k, v, *obj)),
-        None => None,
-      };
+      let item = iter.next().map(|(k, v)| (k, v, *obj));
 
       if item.is_none() {
         self.obj = obj.0.zuper.as_ref();

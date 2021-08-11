@@ -68,11 +68,11 @@ impl<'i> EvalError<'i> {
   pub fn symbolize(&self, w: &mut impl fmt::Write) -> fmt::Result {
     writeln!(w, "error: {}", self.message)?;
     // Find the first "ok" frame.
-    if let Some(_) = self
+    if self
       .trace
       .iter()
       .map(|f| f.error_span)
-      .find(|s| !s.is_synthetic())
+      .any(|s| !s.is_synthetic())
     {
       //span.pretty(w)?;
     }

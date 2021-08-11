@@ -24,7 +24,7 @@ pub use parser::{parse, ParseError};
 
 pub use toolshed::Arena;
 
-/// A source span, indicating a region within a [`Src`]'s original text.
+/// A source span.
 #[derive(Copy, Clone, PartialEq, Eq, Hash)]
 pub struct Span<'i> {
   file_name: &'i Path,
@@ -225,7 +225,7 @@ impl<'i> Spanned<'i> for Ident<'i> {
 }
 
 /// A `Use` represents an import statement in Alkyne, with syntax
-/// ```
+/// ```text
 /// use foo = 'my/config/foo.alkyne';
 /// ```
 ///
@@ -551,7 +551,7 @@ impl<'i> Spanned<'i> for Builtin<'i> {
 }
 
 /// A `List` represents a list literal, with the syntax
-/// ```
+/// ```text
 /// [expr1, expr2, expr3]
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -579,7 +579,7 @@ pub enum KvType {
 
 /// A `Kv` represents a key-value pair, for use as fields in objects; it is
 /// not an expression. It has the syntaxes
-/// ```
+/// ```text
 /// ident: expr
 /// "string literal": expr
 /// [key_expr]: expr
@@ -609,7 +609,7 @@ impl<'i, V> Spanned<'i> for Kv<'i, V> {
 
 /// A `Object` represents an object literal, possibly with a "super" object
 /// that it is extending. It has the syntaxes
-/// ```
+/// ```text
 /// { key: value, key: value }
 /// expr { key: value, key: value }
 /// ```
@@ -631,7 +631,7 @@ impl<'i> Spanned<'i> for Object<'i> {
 
 /// A `Block` represents a block expression, i.e., a sequence of `Let` bindings
 /// ending in an expression. It has the syntax
-/// ```
+/// ```text
 /// {
 ///   let var = expr;
 ///   let var = expr;
@@ -656,7 +656,7 @@ impl<'i> Spanned<'i> for Block<'i> {
 
 /// A `Fn` represents a function literal, which includes argument names and a
 /// body. It has syntaxes
-/// ```
+/// ```text
 /// fn foo(a, b, c) { .. }
 /// fn(a, b, c) expr
 /// ```
@@ -683,7 +683,7 @@ impl<'i> Spanned<'i> for Fn<'i> {
 /// An `If` represents a `if` expression, consisting of a sequence of
 /// clause and expression pairs, and possibly an `else` block. In full
 /// generality, it has syntax
-/// ```
+/// ```text
 /// if expr {
 ///   ...
 /// } else if expr {
@@ -711,7 +711,7 @@ impl<'i> Spanned<'i> for If<'i> {
 /// A `Switch` represents a `switch` expression, which evaluates the first
 /// branch whose value equals that of the argument. In full generality, it
 /// has syntax
-/// ```
+/// ```text
 /// switch arg {
 ///   expr -> expr,
 ///   expr, expr -> expr,
@@ -748,7 +748,7 @@ impl<'i> Spanned<'i> for Switch<'i> {
 
 /// A `For` represents a `for` expression, i.e., a comprehension. It has
 /// the syntax
-/// ```
+/// ```text
 /// for x, y in iter {
 ///   ...
 /// }
@@ -776,7 +776,7 @@ impl<'i> Spanned<'i> for For<'i> {
 
 /// A `Yield` represents a normal `yield` expression, which builds up a
 /// list from inside a `for` loop. It has syntax
-/// ```
+/// ```text
 /// yield expr
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -795,7 +795,7 @@ impl<'i> Spanned<'i> for Yield<'i> {
 
 /// A `YieldKv` represents a key-value `yield` expression, which builds up an
 /// object from inside a `for` loop. It has syntax
-/// ```
+/// ```text
 /// yield [key]: value
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -815,7 +815,7 @@ impl<'i> Spanned<'i> for YieldKv<'i> {
 /// A `Break` represents a `break` expression, which ends iteration in a loop.
 /// A `break` may have a value to indicate that that value should replace
 /// whatever the loop was in the process of yielding. It has syntaxes
-/// ```
+/// ```text
 /// break
 /// break expr
 /// ```
@@ -835,7 +835,7 @@ impl<'i> Spanned<'i> for Break<'i> {
 
 /// A `Cont` represents a `continue` expression, which moves on to th next
 /// iteration in a loop.
-/// ```
+/// ```text
 /// continue
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -852,7 +852,7 @@ impl<'i> Spanned<'i> for Cont<'i> {
 
 /// A `Ret` represents a `return` expression, which returns a value early from
 /// a function.
-/// ```
+/// ```text
 /// return expr
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -870,7 +870,7 @@ impl<'i> Spanned<'i> for Ret<'i> {
 }
 
 /// A `Member` represents a member access, which has syntax
-/// ```
+/// ```text
 /// expr.ident
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -893,7 +893,7 @@ impl<'i> Spanned<'i> for Member<'i> {
 
 /// A `Call` represents a function call, which evaluates a function, a list
 /// of arguments, and then calls the former with the latter. It has syntax
-/// ```
+/// ```text
 /// expr(expr, expr, expr)
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -914,7 +914,7 @@ impl<'i> Spanned<'i> for Call<'i> {
 
 /// An `Index` represents an indexing operation, which is syntactically
 /// identical to a function call. It has syntax
-/// ```
+/// ```text
 /// expr[expr, expr, expr]
 /// ```
 #[derive(Copy, Clone, Debug)]
@@ -936,7 +936,7 @@ impl<'i> Spanned<'i> for Index<'i> {
 }
 
 /// A `Do` represents a do expression. It has syntax
-/// ```
+/// ```text
 /// expr do { foo(it) }
 /// expr do? switch it { .. }
 /// ```
@@ -1047,15 +1047,15 @@ impl BinOpTy {
 
   /// Returns whether this operator is overloadable by user code.
   pub fn overloadable(&self) -> bool {
-    match self {
+    matches!(
+      self,
       BinOpTy::Add
-      | BinOpTy::Sub
-      | BinOpTy::Mul
-      | BinOpTy::Div
-      | BinOpTy::Rem
-      | BinOpTy::Eq => true,
-      _ => false,
-    }
+        | BinOpTy::Sub
+        | BinOpTy::Mul
+        | BinOpTy::Div
+        | BinOpTy::Rem
+        | BinOpTy::Eq
+    )
   }
 }
 

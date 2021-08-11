@@ -61,7 +61,7 @@ impl<'i> Executor<'i> {
       version = env!("CARGO_PKG_VERSION"),
       os = std::env::consts::OS,
       arch = std::env::consts::ARCH,
-      rustc = rustc_version::version().unwrap_or((0, 0, 0).into()),
+      rustc = rustc_version::version().unwrap_or_else(|_| (0, 0, 0).into()),
     );
     eprintln!("Enter expressions to below and have them evaluated");
     eprintln!("Run :quit, or double-press ^C, to escape.");
@@ -73,7 +73,7 @@ impl<'i> Executor<'i> {
         continue;
       }
 
-      if buf.starts_with(":") {
+      if buf.starts_with(':') {
         self.execute_command(&buf)?;
         continue;
       }
@@ -154,7 +154,7 @@ available commands:
 :quit  - exits the REPL\
 "
       ),
-      ":emit" | ":e" => match args.get(1).map(|s| *s) {
+      ":emit" | ":e" => match args.get(1).copied() {
         Some("alkyne") | Some("u") => {
           self.print_function =
             Box::new(|v| Encoder::<UclEncoding>::new().encode(v))
