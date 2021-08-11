@@ -14,9 +14,15 @@
 
 [package]
 name = "alkyne"
-version = "0.2.0"
-authors = ["Miguel Young <mcyoung@mit.edu>"]
+version = "0.1.0"
 edition = "2018"
+
+authors = ["Miguel Young <mcyoung@mit.edu>"]
+description = "A simple scripting language for generating JSON blobs"
+homepage = "https://github.com/mcy/alkyne"
+repository = "https://github.com/mcy/alkyne"
+
+license = "Apache-2.0"
 
 [dependencies]
 crossbeam = "0.7.2"
