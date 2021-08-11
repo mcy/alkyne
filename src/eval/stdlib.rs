@@ -74,11 +74,9 @@ pub fn lookup_std<'i>(key: &str) -> Option<Value<'i>> {
     // Returns whether `x` has a JSON encoding value, i.e., any
     // of null, bool, number, string, list, or object.
     fn is_json(x: any) {
-      match x.ty() {
+      matches!(x.ty(),
         Type::Null | Type::Bool | Type::Number |
-        Type::String | Type::List | Type::Object => true,
-        _ => false,
-      }
+        Type::String | Type::List | Type::Object)
     }
 
     // Returns whether `x` is of type null.
@@ -111,18 +109,13 @@ pub fn lookup_std<'i>(key: &str) -> Option<Value<'i>> {
     // `same(x, x)` always holds.
     fn same(a: any, b: any) {
       match (a, b) {
-        (Value::Null, Value::Null)
-          => true,
-        (Value::Bool(a), Value::Bool(b))
-          => a == b,
-        (Value::Number(a), Value::Number(b))
-          => a == b,
-        (Value::String(a), Value::String(b))
-          => a.ptr_eq(&b),
-        (Value::List(a), Value::List(b))
-          => a.ptr_eq(&b),
-        (Value::Object(a), Value::Object(b))
-          => a.ptr_value() == b.ptr_value(),
+        (Value::Null, Value::Null) => true,
+        (Value::Bool(a), Value::Bool(b)) => a == b,
+        #[allow(clippy::float_cmp)]
+        (Value::Number(a), Value::Number(b)) => a == b,
+        (Value::String(a), Value::String(b)) => a.ptr_eq(&b),
+        (Value::List(a), Value::List(b)) => a.ptr_eq(&b),
+        (Value::Object(a), Value::Object(b)) => a.ptr_value() == b.ptr_value(),
         _ => false,
       }
     }

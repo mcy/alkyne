@@ -581,9 +581,8 @@ impl<'i> Context<'i> {
         }
 
         let (key, value, nullable) = self.eval_kv(kv)?;
-        match (&value, nullable) {
-          (Value::Null, true) => return Ok(Value::Null),
-          _ => {}
+        if let (Value::Null, true) = (&value, nullable) {
+          return Ok(Value::Null);
         }
 
         let key = match key {
@@ -1493,9 +1492,8 @@ impl<'i> Context<'i> {
       } else {
         self.eval_expr(&field.value)?
       };
-      match (&val, field.nullable) {
-        (Value::Null, true) => continue,
-        _ => {}
+      if let (Value::Null, true) = (&val, field.nullable) {
+        continue;
       }
       obj.define(key_str, val, true);
     }
@@ -1542,7 +1540,7 @@ impl<'i> Context<'i> {
         return Ok(());
       }
 
-      if let Some(_) = bindings.iter().find(|(k, _)| *k == name) {
+      if bindings.iter().any(|(k, _)| *k == name) {
         error!(this, span, "cannot bind same name twice in pattern")
       }
       bindings.push((name, val.into()));

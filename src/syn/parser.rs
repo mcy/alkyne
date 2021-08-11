@@ -14,6 +14,8 @@
 
 //! The nuts and bolts of the Alkyne parser.
 
+#![allow(clippy::upper_case_acronyms)]
+
 use std::fmt;
 use std::mem;
 use std::path::Path;
@@ -415,7 +417,7 @@ impl<'i> Context<'i> {
         let value =
           pairs.next().map(|p| &*self.arena.alloc(self.parse_expr(p)));
 
-        syn::Expr::Break(syn::Break { value: value, span })
+        syn::Expr::Break(syn::Break { value, span })
       }
       Rule::Cont => syn::Expr::Cont(syn::Cont { span }),
       Rule::RetExpr => {
@@ -616,7 +618,7 @@ impl<'i> Context<'i> {
             _ => {
               let body = self.parse_expr(pair);
               let fnc = syn::Expr::Fn(syn::Fn {
-                name: Some(name.clone()),
+                name: Some(name),
                 args: self.arena.alloc_vec(args),
                 body: self.arena.alloc(body),
                 span,
@@ -766,10 +768,10 @@ impl<'i> Context<'i> {
         })
       }
       Rule::OrPat => {
-        let mut pairs = pair.into_inner();
+        let pairs = pair.into_inner();
         let mut pats = Vec::new();
 
-        while let Some(pair) = pairs.next() {
+        for pair in pairs {
           if let Rule::Or = pair.as_rule() {
             continue;
           }

@@ -35,6 +35,7 @@ pub type List<'i> = ArcSlice<'i, [Value<'i>]>;
 /// Represents a block of data that can be put into an `ArcSlice`.
 ///
 /// For example, `[T]` implements this trait.
+#[allow(clippy::len_without_is_empty)]
 pub trait Seq {
   /// Slices along `range`.
   ///
@@ -250,9 +251,7 @@ impl<'i, S: Seq + ?Sized> ArcSlice<'i, S> {
 
     let start = range.start + self.start;
     let end = range.end + self.start;
-    if let None = inner.slice(start..end) {
-      return None;
-    }
+    inner.slice(start..end)?;
 
     if range.start == range.end {
       return Some(Self::empty());
@@ -274,6 +273,11 @@ impl<'i, S: Seq + ?Sized> ArcSlice<'i, S> {
   /// Returns the length of the subrange that this `ArcSlice` points to.
   pub fn len(&self) -> usize {
     self.end - self.start
+  }
+
+  /// Returns whether this `ArcSlice` is empty.
+  pub fn is_empty(&self) -> bool {
+    self.len() == 0
   }
 
   /// Compares `self` and `other` for pointer equality, i.e., they point to the
@@ -316,11 +320,6 @@ impl<S: Seq + ?Sized + PartialEq> PartialEq for ArcSlice<'_, S> {
   #[inline]
   fn eq(&self, other: &Self) -> bool {
     self.as_sliced().eq(other.as_sliced())
-  }
-
-  #[inline]
-  fn ne(&self, other: &Self) -> bool {
-    self.as_sliced().ne(other.as_sliced())
   }
 }
 

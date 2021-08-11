@@ -14,6 +14,7 @@
 
 #![deny(unused)]
 #![deny(warnings)]
+#![allow(clippy::new_without_default)]
 
 use crate::eval::encode::json::JsonEncoding;
 use crate::eval::encode::Encoder;
