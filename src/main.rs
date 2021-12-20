@@ -22,6 +22,7 @@ use crate::exec::fs::Local;
 use crate::exec::parallel::Executor;
 
 pub mod eval;
+pub mod eval2;
 pub mod exec;
 pub mod syn;
 

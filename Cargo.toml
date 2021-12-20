@@ -27,6 +27,7 @@ license = "Apache-2.0"
 [dependencies]
 crossbeam = "0.7.2"
 chashmap = "2.2.2"
+mmap = "0.1.1"
 pest = "2.1.2"
 pest_derive = "2.1.0"
 rustc_version = "0.2.3"
